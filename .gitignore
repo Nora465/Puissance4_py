@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+.vscode/
+assets/
+interface_1.py
+old_interface.py
+setup.py
