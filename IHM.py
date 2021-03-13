@@ -1,35 +1,40 @@
-# Gestion de l'IHM
+# HMI Things
 import pygame
 import model
 
-noir = (1, 1, 1)
-blanc = (255, 255, 255)
+black = (1, 1, 1)
+white = (255, 255, 255)
 
 #==================== PyGame Things ===================
-screen = pygame.display.set_mode((1200, 800)) #TAILLE DE LA FENETRE
+screen = pygame.display.set_mode((1200, 800)) # Window Size
 
-tablette = pygame.image.load("assets/Tablette.png")
-tablette = pygame.transform.scale(tablette, (900, 700))
+gameBoard = pygame.image.load("assets/Tablette.png")
+gameBoard = pygame.transform.scale(gameBoard, (900, 700)) #Increase size of gameBoard 
 
-pionj= pygame.image.load("assets/PionJaune.png")
-pionjBarre= pygame.image.load("assets/PionJauneCroix.png")
-pionb = pygame.image.load("assets/pion20bleu.png")
+pionj		= pygame.image.load("assets/PionJaune.png")
+pionjBarre	= pygame.image.load("assets/PionJauneCroix.png")
+pionb 		= pygame.image.load("assets/PionBleu.png")
+pionbBarre	= pygame.image.load("assets/PionBleuCroix.png")
+
+needUpdate = True #True if the board need to be updated
 
 #============ FUNCTIONS =====================================
-def ShowPlato():
-	screen.fill((blanc))
-	screen.blit(tablette, (0,0))
-	#pos for bouton change color 24 659
+def ShowBoardElem():
+	screen.fill((white))
+	screen.blit(gameBoard, (0,0))
+	#pos for first bouton (24, 659)
 
-def updatePlateau(Platojeu :model.Plateau, needUpdate= True):	#mise à jour de l'affichage
+def updateHMI(boardData :model.Plateau):	#Update the program window
+	global needUpdate #reference to the global variable
 	if needUpdate:
-		ShowPlato()
-		showTheFirst(Platojeu)
+		ShowBoardElem()
+		showTheFirst(boardData)
 		
-		AllPos = Platojeu.allPions
-		for i in range(len(AllPos)):			#i: colonne
-			for j in range(len(AllPos[i])):		#j : ligne 
+		AllPos = boardData.allTokens
+		for i in range(len(AllPos)):			#i: column
+			for j in range(len(AllPos[i])):		#j : line 
 				placerPion(AllPos[i][j], (i, j))
+		needUpdate = False
 		
 def createCol(): #créé les colonnes, qui servira à déclencher les events
 	#Les colonnes font 60 de largeur, et 490 de hauteur
@@ -43,7 +48,7 @@ def createCol(): #créé les colonnes, qui servira à déclencher les events
 		#retTab.append(pygame.draw.rect(screen, (noir), (xPos, 80, 64, 490), 1)) #permet d'afficher les cols
 	return retTab
 
-def placerPion(color:str, place:tuple):		#Place un pion graphiquement
+def placerPion(playerTok:int, place:tuple):		#Place un pion graphiquement
 	#Goulotte: 60 de largeur et 490 de hauteur
 	#pion: 65 de largeur et 56 de hauteur
 	#point initial: (220, 80)
@@ -52,14 +57,20 @@ def placerPion(color:str, place:tuple):		#Place un pion graphiquement
 	posX= 220 + (68 * place[0])
 	posY= 513 - (56 * place[1])
 
-	if   color == "yellow":	screen.blit(pionj, (posX, posY))
-	elif color == "blue":	screen.blit(pionb, (posX, posY))
+	if   playerTok == 1:	screen.blit(pionj, (posX, posY))
+	elif playerTok == 2:	screen.blit(pionb, (posX, posY))
 
 def showTheFirst(platoJeu:model.Plateau):		#trouver un meilleur nom (affiche le pion tout en haut, pour indiquer où il va tomber)
-	xPos = 219 + (68 * platoJeu.UpPion) #220=emplacement 1er colonne // 70=distance entre chaque colonne
-	pionsCol = platoJeu.allPions[platoJeu.UpPion]
+	xPos = 219 + (68 * platoJeu.shadowToken) #220=emplacement 1er colonne // 70=distance entre chaque colonne
+	pionsCol = platoJeu.allTokens[platoJeu.shadowToken]
 	
-	if len(pionsCol) == 7:
-		screen.blit(pionjBarre, (xPos, 95))
-	else:
-		screen.blit(pionj, (xPos, 95))
+	if len(pionsCol) < 7: #if the column is not full
+		if platoJeu.curPlayer:
+			screen.blit(pionj, (xPos, 95))
+		else:
+			screen.blit(pionb, (xPos, 95))
+	else:					#if the column is full
+		if platoJeu.curPlayer:
+			screen.blit(pionjBarre, (xPos, 95))
+		else:
+			screen.blit(pionbBarre, (xPos, 95))

@@ -1,68 +1,46 @@
 import pygame, sys
 import model, IHM
 
+def UpdateShadowTokenPos(numChan:int)-> bool:
+	"""
+	determine if the shadow token has change its position \n
+	return a bool that represent the need to update the board
+	"""
+	if platoJeu.shadowToken != numChan:
+		platoJeu.shadowToken = numChan	#store the new position in PlatoJeu
+		return True
+	else: 
+		return False
+
+#======================================================================
 pygame.init()
 
-pygame.display.set_caption("New Interface")
+pygame.display.set_caption("My Connect-4 Game!")
 
-platoJeu = model.Plateau() #Ma POO
+platoJeu = model.Plateau(2) #My POO (english : Object-Oriented Programming)
 
-def updateNeedMaj(numGou:int):
-	if platoJeu.UpPion != numGou:
-		platoJeu.UpPion = numGou
-		return True
-	else: return False
+#needUpdate:bool = True #True if the board need to be updated
 
-needMAJ = True
-
-IHM.updatePlateau(platoJeu)
+IHM.ShowBoardElem() #display the board at launch
 
 while True:
-	tabOfRect = IHM.createCol() #création des colonnes pour detecter la souris
+	tabOfRect = IHM.createCol() #Get an array of the 7 rectangles (to detect the mouse cursor)
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
-			pygame.quit() #ferme pygame
-			sys.exit() #ferme le programme
-			
-		if tabOfRect[0].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 1
-			needMAJ = updateNeedMaj(0)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g0.addYellow() #ajout d'un pion jaune
+			pygame.quit() #close pygame
+			sys.exit() #close the python program
+		
+		for i in range(len(tabOfRect)):
+			if tabOfRect[i].collidepoint(pygame.mouse.get_pos()): #is mouse in the column "i" ?
+				IHM.needUpdate = UpdateShadowTokenPos(i) #Update the position of the shadow token
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					IHM.needUpdate = platoJeu.addToken(i) #if mouse click, add a token in the column "i"
+					
 
-		elif tabOfRect[1].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(1)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g1.addYellow() #ajout d'un pion jaune
-
-		elif tabOfRect[2].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(2)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g2.addYellow() #ajout d'un pion jaune
-				
-		elif tabOfRect[3].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(3)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g3.addYellow() #ajout d'un pion jaune
-
-		elif tabOfRect[4].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(4)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g4.addYellow() #ajout d'un pion jaune
-
-		elif tabOfRect[5].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(5)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g5.addYellow() #ajout d'un pion jaune
-
-		elif tabOfRect[6].collidepoint(pygame.mouse.get_pos()): #Souris entre dans goulotte 2
-			needMAJ = updateNeedMaj(6)
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				needMAJ = platoJeu.g6.addYellow() #ajout d'un pion jaune
-
-	#print(pygame.mouse.get_pos()) #debug : affiche la position de la souris
+	#print(pygame.mouse.get_pos()) #debug : show the mouse position
 	
-	IHM.updatePlateau(platoJeu, needMAJ)
-	needMAJ = False
+	IHM.updateHMI(platoJeu) #Update the board, only if needed
+	IHM.needUpdate = False
 
-	pygame.display.flip()
+	pygame.display.update()
