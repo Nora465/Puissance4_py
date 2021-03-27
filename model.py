@@ -1,124 +1,157 @@
-#The class
-import pygame
-
-noir = (1, 1, 1)
-blanc = (255, 255, 255) #INITIALISATION COULEURS 
-
-numOfLines = 6
-numOfCol = 7
-
-class Goulotte(): #une des goulottes (=colonne) du plateau de jeu
-	"""
-	Représente une des colonnes du plateau de jeu
-	"""
-	def __init__(self, nbG:int):
-		self.pionPos:list = [] #tableau des pions (1 ou 2)
-		self.nbGoulotte:int = nbG #position de la goulotte (0 à 6)
-"""
-	def addYellow(self) ->bool:
-		if len(self.pionPos) < 7: #7 pions max dans chaque goulotte
-			self.pionPos.insert(0, "yellow")
-			return True
-		return False
-
-	def addBlue(self) ->bool:
-		if len(self.pionPos) < 7: #7 pions max dans chaque goulotte
-			self.pionPos.insert(0, "blue")
-			return True
-		return False
-
-	def addPion(self, curPlayer:int) ->bool:
-		if len(self.pionPos) < 7: #7 pions max dans chaque goulotte
-			self.pionPos.insert(0, ("yellow", "blue")[curPlayer==1])
-			return True
-		return False
-		"""
+import pygame, numpy as np
 
 class Plateau():
 	"""
 	Représente le plateau de jeu
 	"""
-	def __init__(self, numOfPlayer: int):				# Création des 7 goulottes du jeu
-		self.g0 = Goulotte(0)
-		self.g1 = Goulotte(1)
-		self.g2 = Goulotte(2)
-		self.g3 = Goulotte(3)
-		self.g4 = Goulotte(4)
-		self.g5 = Goulotte(5)
-		self.g6 = Goulotte(6)
+	def __init__(self, numOfPlayer: int):
+		#Initialize the game board
+		self.numLines = 7
+		self.numCol = 7
+		self.board = np.zeros((self.numCol, self.numLines), np.int8)
+		self.curMusic = "" #either "astronaut" or "mercury"
+		self.mouseBoardPos = [0, 0] #Position of the mouse on board => (col, line)
 
+		#Initialize the players
 		self.numPlayer = numOfPlayer
-		self.curPlayer = True # True: P1/Yellow False: P2/Blue ...
+		self.players = []
+		for i in range(numOfPlayer):
+			self.players.append(Player(i+1))
+		self.curPlayer:Player = self.players[0] # 1: P1/Yellow 2: P2/Blue ...
+		self.__availableCap = ["capInvLine", "capInvCol"]
+		self.winnerID = 0
 
-		self.shadowToken = 0 #le pion qui apparait en haut de l'écran
+	def ChangeMusic(self, newMusic:str):
+		self.curMusic = newMusic
+		if   newMusic == "astronaut": pygame.mixer.music.load("./musics/Astronaut.mp3")
+		elif newMusic == "mercury"  : pygame.mixer.music.load("./musics/Mercury.mp3")
+		pygame.mixer.music.play(0)
 
-		self.allTokens = [self.g0.pionPos, self.g1.pionPos, self.g2.pionPos, 
-						self.g3.pionPos, self.g4.pionPos, self.g5.pionPos, self.g6.pionPos]
+#===================== PLAYERS ===================================
+	def NextPlayer(self):
+		""" increment the current player """
+		nextID = self.curPlayer.ID + 1
+		#If nextID is bigger than the number of players, return to player 1
+		if nextID > self.numPlayer:
+			nextID= 1
+		
+		self.curPlayer = self.players[nextID-1]
 
-	def addToken(self, numGoulotte:int)-> bool:
-		if len(self.allTokens[numGoulotte]) < 7: #7 pions max dans chaque goulotte
-			self.allTokens[numGoulotte].insert(6, 1 if self.curPlayer else 2)
-			self.curPlayer = not self.curPlayer #Change the current player
-			#self.DetectVictory(numGoulotte)
-			#self.DetectLines(len(self.allTokens[numGoulotte])-1)
+	def ChangeCap(self, newCap:str):
+		""" Change the capacity of current player, and then change the current player \n\r 
+		Return True if the cap has been applied \n\r
+		Return False if the cap is not available (or doesn't exist) """
+		if self.__availableCap.count(newCap) == 1:
+			self.__availableCap.remove(newCap)
+			self.players[self.curPlayer.ID-1].capacity = newCap
+			self.NextPlayer()
 			return True
 		return False
-
-	def DetectVictory(self, numColumn:int):
-		lastPos = (numColumn, len(self.allTokens[numColumn]))
-		isvictorious = (self.DetectColumns(lastPos[0])) or (self.DetectLines(lastPos[1]))
-		self.findTokensAround(lastPos)
-
-	def DetectLines(self, numLine:int)-> bool:
-		"numLine : numéro de ligne (0-6) du dernier pion posé"
-		potentialCols = [] #columns with the same number of token than the actual token
-		for i in range(len(self.allTokens)): #loop through columns
-			if len(self.allTokens[i]) >= numLine: #checks if 
-				potentialCols.append(i) #add good column to array
-		if len(potentialCols) <= 4: return False #if less than 4 tokens aligned, not win
 		
-		temp = 0
-		oldOne = 0
-		tab=[]
-		for i in range(len(potentialCols)): #check if there is no gap between 4 tokens
-			if (potentialCols[i]) == oldOne+1:
-				temp += 1
-				#if potentialCols[i] == 
-				test = self.allTokens[potentialCols[i]][numLine]
+#===================== ADDING TOKENS ===================================
+	def ColIsNotFull(self, col:int):
+		""" Return true if the column can accept another token """
+		return self.board[col][self.numLines-1] == 0
+
+	def __FindNextAvailableLine(self, col:int): #Find the available line in the board (to put a token)
+		for i in range(self.numLines):
+			if self.board[col][i] == 0:
+				return i
+
+	def addToken(self, numGoulotte:int)-> bool:
+		"""
+		Insert a token in the board
+		numGoulotte : between 0 to 6
+		return : the need to update the screen
+		"""
+		if self.ColIsNotFull(numGoulotte): #emplacement disponible ?			
+			tokLine = self.__FindNextAvailableLine(numGoulotte)
+			self.board[numGoulotte, tokLine] = self.curPlayer.ID
+			return True
+		return False
+	
+	def DoColCap(self, col:int):
+		for i in range(7):
+			if self.board[col,i] == 0 :
 				pass
 			else:
-				temp = 0
-			oldOne = potentialCols[i]
-		if temp >= 4:
-			pass
+				self.board[col,i] = 3-self.board[col,i]
+		print("player"+str(self.curPlayer.ID)+" has done his capacity:" + str(self.curPlayer.capacity))
+		self.NextPlayer()
 
-	def DetectColumns(self, numColumn:int)-> bool:
-		if len(self.allTokens[numColumn]) >= 4: #4 tokens should be here at least
-			pass
+	def DoLineCap(self, line:int):
+		for i in range(6):
+			if self.board[i, line] == 0:
+				pass
+			else:
+				self.board[i, line] = 3-self.board[i, line]
+		print("player"+str(self.curPlayer.ID)+" has done his capacity:" + str(self.curPlayer.capacity))
+		self.NextPlayer()
 
+#===================== VICTORY CONDITIONS ===================================
+	def DetectVictory(self):
+		#print(self.board)
+		""" Detect the victory of a player (return the ID of winner, or 0 if nobody win) """
+		#Check Lines ?
+		for c in range(self.numCol-3):
+			for l in range(self.numLines):
+				if self.board[c][l] == self.board[c+1][l] \
+				== self.board[c+2][l] == self.board[c+3][l] != 0:
+					self.__SetWinner(self.board[c][l])
+					print("win is line")
+					return True
+    
+		#Check Columns ?
+		for c in range(self.numCol):
+			for l in range(self.numLines-3):
+				if self.board[c][l] == self.board[c][l+1] \
+				== self.board[c][l+2] == self.board[c][l+3] != 0:
+					self.__SetWinner(self.board[c][l])
+					print("win is column")
+					return True
 
-	def findTokensAround(self, posToken:tuple):
-		if (len(self.allTokens[posToken[0]]) == len(self.allTokens[posToken[0]-1])):
-			pass
+		#Check Diag : Right (bottom to top)
+		for c in range(self.numCol-3):
+			for l in range(self.numLines-3):
+				if self.board[c][l] == self.board[c+1][l+1] \
+				== self.board[c+2][l+2] == self.board[c+3][l+3] != 0:
+					self.__SetWinner(self.board[c][l])
+					print("win is diag1")
+					return True
 
-		#for i in range(len(self.allTokens)):
-			#if len(self.allTokens[i]) != 0:
+		#Check Diag : Left (bottom to top)
+		for c in range(self.numCol-3):
+			for l in range(3, self.numLines):
+				if self.board[c][l] == self.board[c+1][l-1] \
+				== self.board[c+2][l-2] == self.board[c+3][l-3] != 0:
+					self.__SetWinner(self.board[c][l])
+					print("win is diag2")
+					return True
+		return False
 
+	def __SetWinner(self, IDWinner:int):
+		self.winnerID = IDWinner
 
+	def DetectDraw(self):
+		""" Detect a draw (grid is full) """
+		return not np.any((self.board == 0))
 
+	def ResetData(self):
+		""" Return a new Class, to reset the game """
+		return Plateau(self.numPlayer)
+		pass
+#===================== PLAYER CLASS =========================================
+#============================================================================
 class Player():
 	"""
 	docstring
 	"""
-	def __init__(self, colorPlayer:str):
-		self.name = "P1" if (colorPlayer=="yellow") else "P2"
-		self.color = colorPlayer #either "yellow" or "blue"
+	def __init__(self, IDPlayer:int):
+		self.name = "P" + str(IDPlayer)
+		self.ID = IDPlayer
 		self.capacity = "" #capacity selected by player
-		self.winner = False
-
-	def ChangeCap(self, newCap:str):
-		#Check : Old capacity must be different from the new one
-		if self.capacity == newCap:
-			return -1
-		self.capacity = newCap
-		return 0
+	
+	def hasCap(self, capName:str):
+		if self.capacity == capName:
+			return True
+		else: return False
