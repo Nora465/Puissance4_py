@@ -54,16 +54,12 @@ j2_play = pygame.image.load("assets/J2_play.png")
 capInvLine = pygame.image.load("assets/capLine.png")
 capInvLine = pygame.transform.scale(capInvLine, (150, 150))
 arrowLineJ1 = pygame.image.load("assets/arrowLineJ1.png")
-arrowLineJ1 = pygame.transform.scale(arrowLineJ1, (150, 150))
 arrowLineJ2 = pygame.image.load("assets/arrowLineJ2.png")
-arrowLineJ2 = pygame.transform.scale(arrowLineJ2, (150, 150))
 
 capInvCol = pygame.image.load("assets/capColumn.png") #dessin cap inverser ligne
 capInvCol = pygame.transform.scale(capInvCol, (150, 150))
 arrowColJ1 = pygame.image.load("assets/arrowColumnJ1.png")
-arrowColJ1 = pygame.transform.scale(arrowColJ1, (150, 150))
 arrowColJ2 = pygame.image.load("assets/arrowColumnJ2.png")
-arrowColJ2 = pygame.transform.scale(arrowColJ2, (150, 150))
 
 go = pygame.image.load("assets/go.png")
 go = pygame.transform.scale(go, (100, 100))
@@ -147,7 +143,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 	elif gameState == 3 or gameState == 4:
 		#screen.blit(bgImg, (0, 0))
 		screen.blit(gridImg, coordsGrid)
-		showTheFirst(platoJeu)
+		showTheFirst(platoJeu, gameState)
 
 		#Placement of capacities
 		for player in platoJeu.players:
@@ -278,17 +274,29 @@ def placerPion(player:int, place:tuple):		#Place un pion graphiquement
 	if   player == 1:	screen.blit(pionj, (posX, posY))
 	elif player == 2:	screen.blit(pionb, (posX, posY))
 
-def showTheFirst(platoJeu:model.Plateau):		#//TODO trouver un meilleur nom (affiche le pion tout en haut, pour indiquer où il va tomber)
-	xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
-	pionsCol = platoJeu.board[platoJeu.mouseBoardPos[0]]
-	
-	if platoJeu.ColIsNotFull(platoJeu.mouseBoardPos[0]): #if the column is not full
-		if platoJeu.curPlayer.ID == 1:
-			screen.blit(pionj, (xPos, coordsGrid[1] + 95))
-		elif platoJeu.curPlayer.ID == 2:
-			screen.blit(pionb, (xPos, coordsGrid[1] + 95))
-	else:					#if the column is full
-		if platoJeu.curPlayer.ID == 1:
-			screen.blit(pionjBarre, (xPos, coordsGrid[1] + 95))
-		elif platoJeu.curPlayer.ID == 2:
-			screen.blit(pionbBarre, (xPos, coordsGrid[1] + 95))
+def showTheFirst(platoJeu:model.Plateau, gameState:int):		#//TODO trouver un meilleur nom (affiche le pion tout en haut, pour indiquer où il va tomber)	
+	imgToBlit = 0
+
+	if gameState == 3:
+		xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
+		if platoJeu.ColIsNotFull(platoJeu.mouseBoardPos[0]): #if the column is not full
+			if platoJeu.curPlayer.ID == 1: imgToBlit= pionj
+			elif platoJeu.curPlayer.ID == 2: imgToBlit= pionb
+		else: #if the column is full
+			if platoJeu.curPlayer.ID == 1: imgToBlit= pionjBarre
+			elif platoJeu.curPlayer.ID == 2: imgToBlit= pionbBarre
+		screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))
+
+	elif gameState == 4:
+		if platoJeu.curPlayer.capacity == "capInvLine":
+			if   platoJeu.curPlayer.ID == 1: imgToBlit= arrowLineJ1
+			elif platoJeu.curPlayer.ID == 2: imgToBlit= arrowLineJ2
+			yPos = 511 - (56 * platoJeu.mouseBoardPos[1]) + coordsGrid[1] #220=emplacement 1er colonne // 70=distance entre chaque colonne
+			screen.blit(imgToBlit, (coordsGrid[0] + 150, yPos))	
+
+		elif platoJeu.curPlayer.capacity == "capInvCol":
+			if   platoJeu.curPlayer.ID == 1: imgToBlit= arrowColJ1
+			elif platoJeu.curPlayer.ID == 2: imgToBlit= arrowColJ2
+			xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
+			screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))
+		

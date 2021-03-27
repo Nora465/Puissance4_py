@@ -81,7 +81,7 @@ while not closeGame:
 		pass
 	#State 3 : Game
 	elif gameState == 3:
-		IHM.CheckRectCollide(platoJeu, gameState, "columns") #Update the shadow token
+		IHM.CheckRectCollide(platoJeu, gameState, "columns") #Update the column where the mouse is
 
 		if platoJeu.DetectVictory():
 			gameState = 5
@@ -89,7 +89,6 @@ while not closeGame:
 			gameState = 6
 	#State 4 : Do A Capacity
 	elif gameState == 4:
-		#//TODO afficher une fleche, à la place d'un pion (sur lignes et sur colonnes)
 		IHM.CheckRectCollide(platoJeu, gameState, "columns") #Update the column where the mouse is
 		IHM.CheckRectCollide(platoJeu, gameState, "lines") #Update the line where the mouse is
 	#State 5 : End of the Game (Winner only)

@@ -1,4 +1,4 @@
-import pygame, numpy as np
+import pygame
 
 class Plateau():
 	"""
@@ -8,7 +8,7 @@ class Plateau():
 		#Initialize the game board
 		self.numLines = 7
 		self.numCol = 7
-		self.board = np.zeros((self.numCol, self.numLines), np.int8)
+		self.board = [[0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0]]
 		self.curMusic = "" #either "astronaut" or "mercury"
 		self.mouseBoardPos = [0, 0] #Position of the mouse on board => (col, line)
 
@@ -66,7 +66,7 @@ class Plateau():
 		"""
 		if self.ColIsNotFull(numGoulotte): #emplacement disponible ?			
 			tokLine = self.__FindNextAvailableLine(numGoulotte)
-			self.board[numGoulotte, tokLine] = self.curPlayer.ID
+			self.board[numGoulotte][tokLine] = self.curPlayer.ID
 			return True
 		return False
 	
@@ -134,7 +134,11 @@ class Plateau():
 
 	def DetectDraw(self):
 		""" Detect a draw (grid is full) """
-		return not np.any((self.board == 0))
+		isDraw = True
+		for tab1 in self.board:
+			for item in tab1:
+				if item == 0: isDraw = False
+		return isDraw
 
 	def ResetData(self):
 		""" Return a new Class, to reset the game """
