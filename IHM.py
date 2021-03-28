@@ -73,6 +73,16 @@ astroImg = pygame.transform.scale(astroImg, (50, 50))
 
 mercuImg = pygame.image.load('assets/mercury.png')
 mercuImg = pygame.transform.scale(mercuImg, (50, 50))
+
+#Mini-Game (Ships)
+shipJ1 = pygame.image.load("assets/ShipJ1.png")
+shipJ2 = pygame.image.load("assets/ShipJ2.png")
+
+bulletJ1 = pygame.image.load("assets/PionJaune.png")
+bulletJ1 = pygame.transform.scale(bulletJ1, (25, 25))
+bulletJ2 = pygame.image.load("assets/PionBleu.png")
+bulletJ2 = pygame.transform.scale(bulletJ2, (25, 25))
+
 #==================== Load SOUNDS ===================
 pew = pygame.mixer.Sound('effects/heat-vision.mp3')
 
@@ -166,13 +176,33 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 		
 #=============== GameState 5 - End Of Game (WIN) ==================================
 	elif gameState == 5:
+		screen.blit(bgImg, (0,0))
 		pygame.mixer.music.stop()
+		#Blit the winner screen
 		if platoJeu.winnerID == 0:
 			screen.blit(egalite, (400, 250))
 		if platoJeu.winnerID == 1:
 			screen.blit(victoire_j1, (400, 250))
 		elif platoJeu.winnerID == 2:
 			screen.blit(victoire_j2, (400, 250))
+
+#=============== GameState 6 - Side-Game (In case of Draw) =========================
+	elif gameState == 6:
+		screen.blit(bgImg, (0,0))
+		screen.blit(shipJ1, platoJeu.players[0].ship.shipPos)
+		screen.blit(shipJ2, platoJeu.players[1].ship.shipPos)
+
+		#Blit the bullet (if exists)
+		if platoJeu.players[0].ship.bulExist:
+			screen.blit(bulletJ1, platoJeu.players[0].ship.bulPos)
+		if platoJeu.players[1].ship.bulExist:
+			screen.blit(bulletJ2, platoJeu.players[1].ship.bulPos)
+
+		#Blit the HP representation
+		YLen = 760 * (platoJeu.players[0].ship.HP / 10.0) #Length of the Rect
+		pygame.draw.rect(screen, (250, 192, 70), (0, 20, 20, YLen), 0)
+		YLen = 760 * (platoJeu.players[1].ship.HP / 10.0)
+		pygame.draw.rect(screen, (0, 154, 209), (20, 20, 20, YLen), 0)
 
 def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 	mousePos = pygame.mouse.get_pos()
@@ -226,6 +256,19 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 	#=============== GameState 5 - End of game (Win or Draw) ==================================
 	elif gameState == 5:
 		pass
+	#=============== GameState 6 - Side-Game (in case of Draw) ==================================
+	elif gameState == 6:
+		if   event == "hitJ1" \
+		and platoJeu.players[1].ship.bulExist \
+		and pygame.Rect(platoJeu.players[0].ship.shipPos, (180, 72)).collidepoint(platoJeu.players[1].ship.bulPos):
+			platoJeu.players[1].ship.bulExist = False
+			isOK = True
+
+		elif event == "hitJ2" \
+		and platoJeu.players[0].ship.bulExist \
+		and pygame.Rect(platoJeu.players[1].ship.shipPos, (180, 72)).collidepoint(platoJeu.players[0].ship.bulPos):
+			platoJeu.players[0].ship.bulExist = False
+			isOK = True
 	return isOK
 
 def PlayASound(name:str):
@@ -292,5 +335,4 @@ def showTheFirst(platoJeu:model.Plateau, gameState:int):		#//TODO trouver un mei
 			if   platoJeu.curPlayer.ID == 1: imgToBlit= arrowColJ1
 			elif platoJeu.curPlayer.ID == 2: imgToBlit= arrowColJ2
 			xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
-			screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))
-		
+			screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))	

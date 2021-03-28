@@ -154,6 +154,7 @@ class Player():
 	def __init__(self, IDPlayer:int):
 		self.ID = IDPlayer
 		self.capacity = "" #capacity selected by player
+		self.ship = Vaisso(IDPlayer, [300+390*(IDPlayer-1), 250+ 150*(IDPlayer-1)])
 		self.cooldownCap = 0 #//TODO implement a cooldown after the use of a capacity
 	
 	def hasCap(self, capName:str):
@@ -161,3 +162,61 @@ class Player():
 		if self.capacity == capName:
 			return True
 		else: return False
+
+#===================== VAISSO CLASS =========================================
+#============================================================================
+class Vaisso():
+	"""
+	Class to represent a single ship
+	"""
+	def __init__(self, playerID:int, startPos:list):
+		#The Ship Itself
+		self.ID = playerID
+		self.HP = 10 #Life Points
+		self.shipPos = startPos #Up-Left corner => [0] is X-axis || [1] is Y-axis
+
+		#The Bullet
+		self.bulPos = [0, 0]  #Position of the bullet
+		self.bulExist = False #The Ship had fired a bullet ?
+		self.lastTick = 0 #save the last movement of the bullet
+
+	def GoDown(self):
+		self.shipPos[1] += 30
+		if self.shipPos[1] >= 730:
+			self.shipPos[1] = 730
+
+	def GoUp(self):
+		self.shipPos[1] -= 30
+		if self.shipPos[1] <= 10:
+			self.shipPos[1] = 10
+	
+	def GoLeft(self):
+		self.shipPos[0] -= 30
+		if self.shipPos[0] <= 60:
+			self.shipPos[0] = 60
+
+	def GoRight(self):
+		self.shipPos[0] += 30
+		if self.shipPos[0] >= 1020:
+			self.shipPos[0] = 1020
+
+	def GetHit(self):
+		self.HP -= 1
+		print("ouch, J"+str(self.ID)+" has been hit- HP: "+str(self.HP))
+	
+	def Fire(self):
+		if self.bulExist == False:
+			self.bulExist = True
+			#XPos
+			if   self.ID == 1: self.bulPos[0] = self.shipPos[0] + 180 #the ship length is 180px, in x-axis
+			elif self.ID == 2: self.bulPos[0] = self.shipPos[0] - 25  #Xthe bullet length is 25px, in x-axis
+			#YPos
+			self.bulPos[1] = self.shipPos[1] + (72/2) #the ship is 72px long, in y-axis
+			self.lastTick = pygame.time.get_ticks()
+	
+	def MoveBullet(self, pxToMove:int):
+		if   self.ID == 1: self.bulPos[0] += pxToMove
+		elif self.ID == 2: self.bulPos[0] -= pxToMove
+
+		if self.bulPos[0] >= 1200 or self.bulPos[0] <= 0:
+			self.bulExist = False 
