@@ -2,18 +2,12 @@
 import pygame
 import model
 
-black = (1, 1, 1)
-white = (255, 255, 255)
-
 #==================== PyGame Things ===================
+pygame.init()
+
 screen = pygame.display.set_mode((1200, 800)) # Window Size
 
-coordsGrid = (150, 50) #relative coordinates for placing img on grid
-
-#Positions of Img
-#Pos of capacity images (IG : In Game)
-posIGCapJ1 = (50, 600)
-posIGCapJ2 = (1000, 600)
+coordsGrid = (150, 50) #relative coordinates for placing imgs on grid
 
 #==================== Load IMAGES ===================
 #transform.scale = Increase/Reduce the size of image
@@ -28,7 +22,7 @@ pionb 		= pygame.image.load("assets/PionBleu.png")
 pionbBarre	= pygame.image.load("assets/PionBleuCroix.png")
 
 #Background
-bgImg = pygame.image.load("assets/bg.png") #le fond
+bgImg = pygame.image.load("assets/bg.png")
 bgImg = pygame.transform.scale(bgImg, (1200, 800))
 
 #Start Screen : Buttons
@@ -40,8 +34,8 @@ titleImg = pygame.image.load("assets/titre.png")
 titleImg = pygame.transform.scale(titleImg, (274*2,148*2))
 
 #Victory Screen
-victoire_j1 = pygame.image.load("assets/victoire_j.png") #écran de victoire j1
-victoire_j2 = pygame.image.load("assets/victoire_b.png") #écran de victoire j2
+victoire_j1 = pygame.image.load("assets/victoire_j.png")
+victoire_j2 = pygame.image.load("assets/victoire_b.png")
 egalite = pygame.image.load("assets/egalite.png")
 
 #To show the current player
@@ -56,11 +50,11 @@ capInvLine = pygame.transform.scale(capInvLine, (150, 150))
 arrowLineJ1 = pygame.image.load("assets/arrowLineJ1.png")
 arrowLineJ2 = pygame.image.load("assets/arrowLineJ2.png")
 
-capInvCol = pygame.image.load("assets/capColumn.png") #dessin cap inverser ligne
+capInvCol = pygame.image.load("assets/capColumn.png")
 capInvCol = pygame.transform.scale(capInvCol, (150, 150))
 arrowColJ1 = pygame.image.load("assets/arrowColumnJ1.png")
 arrowColJ2 = pygame.image.load("assets/arrowColumnJ2.png")
-
+#Go button (after the selection of music)
 go = pygame.image.load("assets/go.png")
 go = pygame.transform.scale(go, (100, 100))
 
@@ -80,29 +74,31 @@ astroImg = pygame.transform.scale(astroImg, (50, 50))
 mercuImg = pygame.image.load('assets/mercury.png')
 mercuImg = pygame.transform.scale(mercuImg, (50, 50))
 #==================== Load SOUNDS ===================
-#pew = pygame.mixer.Sound('effects/heat-vision.mp3')
+pew = pygame.mixer.Sound('effects/heat-vision.mp3')
 
 #============ FUNCTIONS =====================================
 def showScreen(platoJeu:model.Plateau, gameState:int):
 	""" Blit things to the screen, and launch musics """
-	screen.blit(bgImg, (0,0))
 #=============== GameState 0 - Title Screen ==================================
 	if gameState == 0:
 		#Images
-		#screen.blit(bgImg, (0,0))
+		screen.blit(bgImg, (0,0))
 		screen.blit(titleImg, (350, 20))
 		screen.blit(playBP, (300,400))
 		screen.blit(quitBP, (700, 400))
 		#Sounds
-		#pygame.mixer.music.load("./musics/menu.mp3")
-		#pygame.mixer.music.play(1)
+		if not pygame.mixer.music.get_busy():
+			pygame.mixer.music.load("./musics/ElevatorMusic.mp3")
+			pygame.mixer.music.play(1)
 #=============== GameState 1 - Select the capacities ==================================
 	elif gameState == 1:
 		#Images
-		#screen.blit(bgImg, (0, 0))
+		screen.blit(bgImg, (0, 0))
 		screen.blit(choose, (150, 0))
-		screen.blit(capInvLine, (505, 250))
-		screen.blit(capInvCol, (500, 450))
+
+		for cap in platoJeu.availableCap:
+			if   cap == "capInvLine": screen.blit(capInvLine, (505, 250))
+			elif cap == "capInvCol":  screen.blit(capInvCol, (500, 450))
 
 		#Show the current player on screen
 		if platoJeu.curPlayer.ID == 1:
@@ -127,7 +123,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			pygame.mixer.music.play(0)
 #=============== GameState 2 - Select the Music ==================================
 	elif gameState == 2:
-		#screen.blit(bgImg, (0, 0))
+		screen.blit(bgImg, (0, 0))
 		screen.blit(musique, (100, -100))
 		screen.blit(astroImg, (200, 150))
 		screen.blit(mercuImg, (300, 150))
@@ -136,16 +132,16 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			screen.blit(txtMusAstro, (200, 200))
 		elif platoJeu.curMusic == "mercury":
 			screen.blit(txtMusMercu, (200, 200))
-		#Put the "GO" button only if a music has been selected
+		#Blit the "GO" button only if a music has been selected
 		if platoJeu.curMusic != "":
 			screen.blit(go, (525, 650))
 #=============== GameState 3/4 - 3:Game | 4:Do A Cap ==================================
 	elif gameState == 3 or gameState == 4:
-		#screen.blit(bgImg, (0, 0))
+		screen.blit(bgImg, (0, 0))
 		screen.blit(gridImg, coordsGrid)
 		showTheFirst(platoJeu, gameState)
 
-		#Placement of capacities
+		#Blit the players capacities
 		for player in platoJeu.players:
 			if   player.capacity == "capInvLine":
 				if 	 player.ID == 1: screen.blit(capInvLine, (50, 600))
@@ -154,7 +150,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 				if 	 player.ID == 1: screen.blit(capInvCol, (50, 600))
 				elif player.ID == 2: screen.blit(capInvCol, (1000, 600))
 		
-		#Placement of "Player Number"
+		#Blit the player indicator
 		if platoJeu.curPlayer.ID == 1:
 			screen.blit(j1_play, (50, 20))
 			screen.blit(j2_menu, (1030, 20))
@@ -162,22 +158,21 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			screen.blit(j1_menu, (50, 20))
 			screen.blit(j2_play, (1030, 20))
 
-		#Placement of Tokens
+		#Blit the board Tokens
 		AllPos = platoJeu.board
 		for i in range(len(AllPos)):			#i: column
 			for j in range(len(AllPos[i])):		#j : line 
-				placerPion(AllPos[i][j], (i, j))
+				PlaceToken(AllPos[i][j], (i, j))
 		
 #=============== GameState 5 - End Of Game (WIN) ==================================
 	elif gameState == 5:
+		pygame.mixer.music.stop()
+		if platoJeu.winnerID == 0:
+			screen.blit(egalite, (400, 250))
 		if platoJeu.winnerID == 1:
 			screen.blit(victoire_j1, (400, 250))
 		elif platoJeu.winnerID == 2:
 			screen.blit(victoire_j2, (400, 250))
-#=============== GameState 6 - End Of Game (DRAW) ==================================
-	elif gameState == 6:
-		screen.blit(egalite, (400, 250))
-
 
 def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 	mousePos = pygame.mouse.get_pos()
@@ -200,21 +195,20 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 			isOK = True
 		if 	 event == "musicMercu" and mercuImg.get_rect(topleft = (300, 150)).collidepoint(mousePos):
 			isOK = True
-		if   event == "GO" and go.get_rect(topleft = (525, 650)).collidepoint(mousePos):
-			isOK = True #//FIXME on peut lancer le jeu, même sans que le bouton "GO" soit présent (en cliquant sur "l'ombre" du bp)
+		if   event == "GO" and go.get_rect(topleft = (525, 650)).collidepoint(mousePos) and platoJeu.curMusic != "":
+			isOK = True
 	#=============== GameState 3 - Game==========================================
 	elif gameState == 3:
 		tabOfRect= createCol()
 		for i in range(len(tabOfRect)):
 			if event == "columns" and tabOfRect[i].collidepoint(mousePos):
 				platoJeu.mouseBoardPos[0] = i #Save the column where the mouse is
-				#platoJeu.shadowToken = i
 				isOK = True
 		
-		#size of Cap Rect: (150, 150)
-		if   event == "capJ1" and pygame.Rect(posIGCapJ1, (150, 150)).collidepoint(mousePos): #capInvLine.get_rect(topleft = (50, 600)).collidepoint(mousePos):
+		#size of "Cap" button : (150, 150)
+		if   event == "capJ1" and pygame.Rect((50, 600), (150, 150)).collidepoint(mousePos):
 			isOK = True
-		elif event == "capJ2" and pygame.Rect(posIGCapJ2, (150, 150)).collidepoint(mousePos): #capInvCol.get_rect(topleft = (1000, 600)).collidepoint(mousePos):
+		elif event == "capJ2" and pygame.Rect((1000, 600), (150, 150)).collidepoint(mousePos):
 			isOK = True
 	#=============== GameState 4 - Do A Capacity ==================================
 	elif gameState == 4:
@@ -222,21 +216,20 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 		for i in range(len(tabOfRect)):
 			if event == "columns" and tabOfRect[i].collidepoint(mousePos):
 				platoJeu.mouseBoardPos[0] = i #Save the column where the mouse is
-				#platoJeu.shadowToken = i
 				isOK = True
 
-		tabOfLines= createLines() #event "lines" is only in state4
+		tabOfLines= createLines()
 		for i in range(len(tabOfLines)):
 			if event== "lines" and tabOfLines[i].collidepoint(mousePos):
 				platoJeu.mouseBoardPos[1] = i #Save the line where the mouse is
 				isOK = True
-	#=============== GameState 5 - End Of Game (WIN) ==================================
-	elif gameState == 5:
-		pass
-#=============== GameState 6 - End Of Game (DRAW) ==================================
+	#=============== GameState 5 - End of game (Win or Draw) ==================================
 	elif gameState == 5:
 		pass
 	return isOK
+
+def PlayASound(name:str):
+	if (name == "pew"): pew.play()
 
 def createCol(): #créé les colonnes, qui servira à déclencher les events
 	#Les colonnes font 60 de largeur, et 490 de hauteur
@@ -262,7 +255,8 @@ def createLines():
 	return retLines
 
 
-def placerPion(player:int, place:tuple):		#Place un pion graphiquement
+def PlaceToken(player:int, place:tuple):
+	""" Place a Token in the board array"""
 	#Goulotte: 60 de largeur et 490 de hauteur
 	#pion: 65 de largeur et 56 de hauteur
 	#point initial: (220, 80)
@@ -278,13 +272,13 @@ def showTheFirst(platoJeu:model.Plateau, gameState:int):		#//TODO trouver un mei
 	imgToBlit = 0
 
 	if gameState == 3:
-		xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
 		if platoJeu.ColIsNotFull(platoJeu.mouseBoardPos[0]): #if the column is not full
 			if platoJeu.curPlayer.ID == 1: imgToBlit= pionj
 			elif platoJeu.curPlayer.ID == 2: imgToBlit= pionb
 		else: #if the column is full
 			if platoJeu.curPlayer.ID == 1: imgToBlit= pionjBarre
 			elif platoJeu.curPlayer.ID == 2: imgToBlit= pionbBarre
+		xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
 		screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))
 
 	elif gameState == 4:
