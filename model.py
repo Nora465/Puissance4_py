@@ -144,7 +144,6 @@ class Plateau():
 	def ResetData(self):
 		""" Return a new Class, to reset the game """
 		return Plateau(self.numPlayer)
-		pass
 #===================== PLAYER CLASS =========================================
 #============================================================================
 class Player():
@@ -205,7 +204,7 @@ class Vaisso():
 		print("ouch, J"+str(self.ID)+" has been hit- HP: "+str(self.HP))
 	
 	def Fire(self):
-		if self.bulExist == False:
+		if not self.bulExist:
 			self.bulExist = True
 			#XPos
 			if   self.ID == 1: self.bulPos[0] = self.shipPos[0] + 180 #the ship length is 180px, in x-axis

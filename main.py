@@ -1,6 +1,8 @@
 import pygame, sys
 import model
 import IHM
+from const import GAME_STATE
+
 #======================================================================
 pygame.init()
 
@@ -18,53 +20,53 @@ while not closeGame:
 			closeGame= True
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			#==== State 0 : Title Screen
-			if gameState == 0:
+			if gameState == GAME_STATE.TITLE_0:
 				if 	 IHM.CheckRectCollide(platoJeu, gameState, "play"):
-					gameState= 1 #Capacities Screen
+					gameState= GAME_STATE.CAP_SELECT_1 #Capacities Screen
 				elif IHM.CheckRectCollide(platoJeu, gameState, "stop"):
 					closeGame= True #Exit the While Loop
 			#==== State 1 : Select the capacities
-			elif gameState == 1:
+			elif gameState == GAME_STATE.CAP_SELECT_1:
 				if 	 IHM.CheckRectCollide(platoJeu, gameState, "capInvLine"):
 					platoJeu.ChangeCap("capInvLine")
 				elif IHM.CheckRectCollide(platoJeu, gameState, "capInvCol"):
 					platoJeu.ChangeCap("capInvCol")
 			#==== State 2 : Select the Music
-			elif gameState == 2:
+			elif gameState == GAME_STATE.MUSIC_SELECT_2:
 				if 	 IHM.CheckRectCollide(platoJeu, gameState, "musicAstro"):
 					platoJeu.ChangeMusic("astronaut")
 				elif IHM.CheckRectCollide(platoJeu, gameState, "musicMercu"):
 					platoJeu.ChangeMusic("mercury")
 				elif IHM.CheckRectCollide(platoJeu, gameState, "GO"):
-					gameState = 3
+					gameState = GAME_STATE.MAIN_GAME_3
 			#==== State 3 : Game
-			elif gameState == 3:
+			elif gameState == GAME_STATE.MAIN_GAME_3:
 				if IHM.CheckRectCollide(platoJeu, gameState, "columns"):
 					platoJeu.addToken(platoJeu.mouseBoardPos[0])
 				elif IHM.CheckRectCollide(platoJeu, gameState, "capJ1"):
 					if platoJeu.curPlayer.ID == 1: 
-						gameState = 4 #Do A Capacity
+						gameState = GAME_STATE.DO_CAP_4 #Do A Capacity
 				elif IHM.CheckRectCollide(platoJeu, gameState, "capJ2"):
-					if platoJeu.curPlayer.ID == 2: 
-						gameState = 4 #Do A Capacity
+					if platoJeu.curPlayer.ID == 2:
+						gameState = GAME_STATE.DO_CAP_4 #Do A Capacity
 			#==== State 4 : Do A Capacity
-			elif gameState == 4:
+			elif gameState == GAME_STATE.DO_CAP_4:
 				if platoJeu.curPlayer.capacity == "capInvLine" and IHM.CheckRectCollide(platoJeu, gameState, "lines"):
 					platoJeu.DoLineCap(platoJeu.mouseBoardPos[1])
 					IHM.PlayASound("pew")
-					gameState = 3 #Return to Game
+					gameState = GAME_STATE.MAIN_GAME_3 #Return to Game
 				elif platoJeu.curPlayer.capacity == "capInvCol" and IHM.CheckRectCollide(platoJeu, gameState, "columns"):
 					platoJeu.DoColCap(platoJeu.mouseBoardPos[0])
 					IHM.PlayASound("pew")
-					gameState = 3 #Return to Game
+					gameState = GAME_STATE.MAIN_GAME_3 #Return to Game
 			#==== State 5 : End of Game (Winner or Draw)
-			elif gameState == 5 :
+			elif gameState == GAME_STATE.WINNER_5:
 				#Click anywhere : restart the game
 				platoJeu = platoJeu.ResetData()
-				gameState = 0
+				gameState = GAME_STATE.TITLE_0
 		#==== State 6 : Side-Game (In case of Draw)
 		elif event.type == pygame.KEYDOWN:
-			if gameState == 6 :
+			if gameState == GAME_STATE.SIDE_GAME_6:
 				#Movement of the ships
 				#Player 1 (yellow)
 				if   event.key == pygame.K_z:	  platoJeu.players[0].ship.GoUp()
@@ -81,47 +83,47 @@ while not closeGame:
 	
 #===================== State Machine ===================================
 	#==== State 0 : Title Screen
-	if gameState == 0:
+	if gameState == GAME_STATE.TITLE_0:
 		pass
 	#==== State 1 : Capacity Selection
-	elif gameState == 1:
+	elif gameState == GAME_STATE.CAP_SELECT_1:
 		allPlayerHasCap = False
 		for player in platoJeu.players:
 			allPlayerHasCap = (player.capacity != "")
 		
-		if allPlayerHasCap: gameState= 2
+		if allPlayerHasCap: gameState= GAME_STATE.MUSIC_SELECT_2
 	#==== State 2 : Music Selection
-	elif gameState == 2:
+	elif gameState == GAME_STATE.MUSIC_SELECT_2:
 		pass
 	#==== State 3 : Game
-	elif gameState == 3:
+	elif gameState == GAME_STATE.MAIN_GAME_3:
 		IHM.CheckRectCollide(platoJeu, gameState, "columns") #Update the column where the mouse is
 		if platoJeu.DetectVictory():
-			gameState = 5
+			gameState = GAME_STATE.WINNER_5
 		elif platoJeu.DetectDraw():
-			gameState = 6
+			gameState = GAME_STATE.SIDE_GAME_6
 
 	#==== State 4 : Do A Capacity
-	elif gameState == 4:
+	elif gameState == GAME_STATE.DO_CAP_4:
 		IHM.CheckRectCollide(platoJeu, gameState, "columns") #Update the column where the mouse is
 		IHM.CheckRectCollide(platoJeu, gameState, "lines") #Update the line where the mouse is
 	#==== State 5 : End of the Game (Winner)
-	elif gameState == 5:
+	elif gameState == GAME_STATE.WINNER_5:
 		pass
 	#==== State 6 : Side-Game (In case of Draw)
-	elif gameState == 6:
+	elif gameState == GAME_STATE.SIDE_GAME_6:
 		for player in platoJeu.players:
 			#Movement of the bullet
 			if player.ship.bulExist:
 				if pygame.time.get_ticks() >= player.ship.lastTick + 100: #in ms
-					player.ship.MoveBullet(10) #Move by 10px every 100ms
+					player.ship.MoveBullet(20) #Move by 10px every 100ms
 			#The bullet has hit a ship ?
 			if IHM.CheckRectCollide(platoJeu, gameState, "hitJ"+str(player.ID)):
 				player.ship.GetHit()
 			#The ship has 0 HP (the other win)
 			if player.ship.HP <= 0:
 				platoJeu.winnerID = (platoJeu.numPlayer+1) - player.ID
-				gameState = 5
+				gameState = GAME_STATE.WINNER_5
 
 	print(pygame.mouse.get_pos()) #debug : show the mouse position
 	

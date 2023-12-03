@@ -1,6 +1,7 @@
 # HMI Things
 import pygame
 import model
+from const import GAME_STATE
 
 #==================== PyGame Things ===================
 pygame.init()
@@ -90,7 +91,7 @@ pew = pygame.mixer.Sound('effects/heat-vision.mp3')
 def showScreen(platoJeu:model.Plateau, gameState:int):
 	""" Blit things to the screen, and launch musics """
 #=============== GameState 0 - Title Screen ==================================
-	if gameState == 0:
+	if gameState == GAME_STATE.TITLE_0:
 		#Images
 		screen.blit(bgImg, (0,0))
 		screen.blit(titleImg, (350, 20))
@@ -101,7 +102,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			pygame.mixer.music.load("./musics/ElevatorMusic.mp3")
 			pygame.mixer.music.play(1)
 #=============== GameState 1 - Select the capacities ==================================
-	elif gameState == 1:
+	elif gameState == GAME_STATE.CAP_SELECT_1:
 		#Images
 		screen.blit(bgImg, (0, 0))
 		screen.blit(choose, (150, 0))
@@ -132,7 +133,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			pygame.mixer.music.load('./musics/ElevatorMusic.mp3')
 			pygame.mixer.music.play(0)
 #=============== GameState 2 - Select the Music ==================================
-	elif gameState == 2:
+	elif gameState == GAME_STATE.MUSIC_SELECT_2:
 		screen.blit(bgImg, (0, 0))
 		screen.blit(musique, (100, -100))
 		screen.blit(astroImg, (200, 150))
@@ -146,7 +147,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 		if platoJeu.curMusic != "":
 			screen.blit(go, (525, 650))
 #=============== GameState 3/4 - 3:Game | 4:Do A Cap ==================================
-	elif gameState == 3 or gameState == 4:
+	elif gameState == GAME_STATE.MAIN_GAME_3 or gameState == GAME_STATE.DO_CAP_4:
 		screen.blit(bgImg, (0, 0))
 		screen.blit(gridImg, coordsGrid)
 		showTheFirst(platoJeu, gameState)
@@ -175,7 +176,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 				PlaceToken(AllPos[i][j], (i, j))
 		
 #=============== GameState 5 - End Of Game (WIN) ==================================
-	elif gameState == 5:
+	elif gameState == GAME_STATE.WINNER_5:
 		screen.blit(bgImg, (0,0))
 		pygame.mixer.music.stop()
 		#Blit the winner screen
@@ -187,7 +188,7 @@ def showScreen(platoJeu:model.Plateau, gameState:int):
 			screen.blit(victoire_j2, (400, 250))
 
 #=============== GameState 6 - Side-Game (In case of Draw) =========================
-	elif gameState == 6:
+	elif gameState == GAME_STATE.SIDE_GAME_6:
 		screen.blit(bgImg, (0,0))
 		screen.blit(shipJ1, platoJeu.players[0].ship.shipPos)
 		screen.blit(shipJ2, platoJeu.players[1].ship.shipPos)
@@ -208,27 +209,27 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 	mousePos = pygame.mouse.get_pos()
 	isOK = False
 	#=============== GameState 0 - Title Screen ==================================
-	if gameState == 0:
+	if gameState == GAME_STATE.TITLE_0:
 		if 	 event == "play" and playBP.get_rect(topleft = (300, 400)).collidepoint(mousePos):
 			isOK = True
 		elif event == "stop" and quitBP.get_rect(topleft = (700, 400)).collidepoint(mousePos):
 			isOK = True
 	#=============== GameState 1 - Select the capacities ==================================
-	elif gameState == 1:
+	elif gameState == GAME_STATE.CAP_SELECT_1:
 		if 	 event == "capInvLine" and capInvLine.get_rect(topleft = (505, 250)).collidepoint(mousePos):
 			isOK = True
 		if 	 event == "capInvCol" and capInvCol.get_rect(topleft = (500, 450)).collidepoint(mousePos):
 			isOK = True
 	#=============== GameState 2 - Select the Music ==================================
-	elif gameState == 2:
+	elif gameState == GAME_STATE.MUSIC_SELECT_2:
 		if 	 event == "musicAstro" and astroImg.get_rect(topleft = (200, 150)).collidepoint(mousePos):
 			isOK = True
 		if 	 event == "musicMercu" and mercuImg.get_rect(topleft = (300, 150)).collidepoint(mousePos):
 			isOK = True
 		if   event == "GO" and go.get_rect(topleft = (525, 650)).collidepoint(mousePos) and platoJeu.curMusic != "":
 			isOK = True
-	#=============== GameState 3 - Game==========================================
-	elif gameState == 3:
+	#=============== GameState 3 - Game ==========================================
+	elif gameState == GAME_STATE.MAIN_GAME_3:
 		tabOfRect= createCol()
 		for i in range(len(tabOfRect)):
 			if event == "columns" and tabOfRect[i].collidepoint(mousePos):
@@ -241,7 +242,7 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 		elif event == "capJ2" and pygame.Rect((1000, 600), (150, 150)).collidepoint(mousePos):
 			isOK = True
 	#=============== GameState 4 - Do A Capacity ==================================
-	elif gameState == 4:
+	elif gameState == GAME_STATE.DO_CAP_4:
 		tabOfRect= createCol()
 		for i in range(len(tabOfRect)):
 			if event == "columns" and tabOfRect[i].collidepoint(mousePos):
@@ -254,10 +255,10 @@ def CheckRectCollide(platoJeu:model.Plateau, gameState:int, event:str):
 				platoJeu.mouseBoardPos[1] = i #Save the line where the mouse is
 				isOK = True
 	#=============== GameState 5 - End of game (Win or Draw) ==================================
-	elif gameState == 5:
+	elif gameState == GAME_STATE.WINNER_5:
 		pass
 	#=============== GameState 6 - Side-Game (in case of Draw) ==================================
-	elif gameState == 6:
+	elif gameState == GAME_STATE.SIDE_GAME_6:
 		if   event == "hitJ1" \
 		and platoJeu.players[1].ship.bulExist \
 		and pygame.Rect(platoJeu.players[0].ship.shipPos, (180, 72)).collidepoint(platoJeu.players[1].ship.bulPos):
@@ -314,7 +315,7 @@ def PlaceToken(player:int, place:tuple):
 def showTheFirst(platoJeu:model.Plateau, gameState:int):		#//TODO trouver un meilleur nom (affiche le pion tout en haut, pour indiquer où il va tomber)	
 	imgToBlit = 0
 
-	if gameState == 3:
+	if gameState == GAME_STATE.MAIN_GAME_3:
 		if platoJeu.ColIsNotFull(platoJeu.mouseBoardPos[0]): #if the column is not full
 			if platoJeu.curPlayer.ID == 1: imgToBlit= pionj
 			elif platoJeu.curPlayer.ID == 2: imgToBlit= pionb
@@ -324,7 +325,7 @@ def showTheFirst(platoJeu:model.Plateau, gameState:int):		#//TODO trouver un mei
 		xPos = 219 + (68 * platoJeu.mouseBoardPos[0]) + coordsGrid[0] #220=emplacement 1er colonne // 70=distance entre chaque colonne
 		screen.blit(imgToBlit, (xPos, coordsGrid[1] + 95))
 
-	elif gameState == 4:
+	elif gameState == GAME_STATE.DO_CAP_4:
 		if platoJeu.curPlayer.capacity == "capInvLine":
 			if   platoJeu.curPlayer.ID == 1: imgToBlit= arrowLineJ1
 			elif platoJeu.curPlayer.ID == 2: imgToBlit= arrowLineJ2
